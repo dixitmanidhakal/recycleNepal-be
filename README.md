@@ -1,4 +1,3 @@
-Getting Started with My Awesome Repository
 Welcome to my GitHub repository! Follow the steps below to get started quickly.
 
 Edit a File
