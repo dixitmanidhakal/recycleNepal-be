@@ -20,7 +20,7 @@ const login = async (req, res) => {
         null
       );
     }
-    const user = await User.findOne({ email });
+    const user = await userModel.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
       const tokenKey = process.env.TOKEN_KEY;
 
@@ -34,13 +34,19 @@ const login = async (req, res) => {
       }
 
       const token = jsonwebtoken.sign({ user_id: user._id, email }, tokenKey, {
-        expiresIn: "2h",
+        expiresIn: "30d",
       });
 
       user.token = token;
       const date = new Date();
       user.expiryTime = Math.round(date.setHours(date.getHours() + 2) / 1000);
-      return createResponse(res, 200, "Successfully logged in", user);
+
+      const userWithToken = {
+        ...user._doc, // get the properties of the user object
+        token,
+      };
+
+      return createResponse(res, 200, "Successfully logged in", userWithToken);
     } else {
       return createResponse(res, 400, "Invalid credentials", null);
     }
@@ -52,8 +58,7 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { email, password, password_confirm, role, 
-      otherFields } = req.body;
+    const { email, password, password_confirm, role, otherFields } = req.body;
 
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
@@ -86,7 +91,7 @@ const register = async (req, res) => {
 
     try {
       await user.save();
-    
+
       const tokenKey = process.env.TOKEN_KEY;
       if (!tokenKey) {
         return createResponse(
@@ -96,11 +101,11 @@ const register = async (req, res) => {
           null
         );
       }
-    
+
       const token = jsonwebtoken.sign({ user_id: user._id, email }, tokenKey, {
         expiresIn: "2h",
       });
-    
+
       res.status(201).json({ message: "User registered successfully", token });
     } catch (error) {
       console.error(error);
