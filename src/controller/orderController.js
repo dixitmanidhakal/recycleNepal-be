@@ -27,7 +27,7 @@ const createOrder = async (req, res) => {
         name: item.name,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        purchased: true, // Set the purchased field in the order
+        purchased: item.purchased
       }));
 
       // Create a new order
