@@ -234,4 +234,19 @@ const createOrder = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, reciveOrder };
+const orderTracker = async (req, res) => {
+  const userId = req.params.id;
+  console.log("user id", userId);
+  try {
+    const newUser = new Order({
+      userId: userId,
+      isComplete: false
+    });
+    const savedUser = await newUser.save();
+    res.status(201).json(savedUser);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+module.exports = { createOrder, reciveOrder, orderTracker };
