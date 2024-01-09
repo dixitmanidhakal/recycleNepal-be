@@ -1,14 +1,16 @@
 const express = require("express");
 const {
-  createOrder,
-  reciveOrder,
   orderTracker,
+  getOrdersForBuyers,
+  orderCompletion,
 } = require("../controller/orderController");
 
 const router = express.Router();
 
 router.post("/createOrder/:id", orderTracker);
 
-router.get("/getBuyerList", createOrder);
+router.post("/getOrderList/:id", getOrdersForBuyers);
+
+// router.post("/accpectedOrder", orderCompletion);
 
 module.exports = router;

@@ -37,7 +37,8 @@ const regularUserSchema = new mongoose.Schema({
       {
         name: String,
         quantity: Number,
-        unitPrice: String,
+        unitPrice: Number,
+        total: Number,
         purchased: { type: Boolean, default: false },
       },
     ],

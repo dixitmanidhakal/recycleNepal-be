@@ -17,7 +17,7 @@ const addToCart = async (req, res) => {
 
       // Update the user's cart
       for (const item of cartItems) {
-        const { name, quantity, unitPrice, purchased } = item;
+        const { name, quantity, unitPrice, total, purchased } = item;
 
         if (name && quantity && unitPrice) {
           await user.updateCartDetails({
@@ -25,6 +25,7 @@ const addToCart = async (req, res) => {
             quantity,
             unitPrice,
             purchased,
+            total,
           });
         } else {
           return createResponse(

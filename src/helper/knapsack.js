@@ -1,31 +1,28 @@
-function knapsack(values, weights, capacity) {
-  const n = values.length;
+function multipleKnapsack(weights, profits, capacities) {
+  const numKnapsacks = capacities.length;
+  const numItems = weights.length;
 
-  // Initialize a 2D array to store the maximum values for each subproblem
-  const dp = new Array(n + 1)
-    .fill(0)
-    .map(() => new Array(capacity.length).fill(0));
+  // Initialize a 2D array to store intermediate results
+  const dp = Array.from({ length: numKnapsacks + 1 }, () =>
+    Array.from({ length: numItems + 1 }, () => 0)
+  );
 
-  // Build the table in a bottom-up manner
-  for (let i = 1; i <= n; i++) {
-    for (let j = 0; j < capacity.length; j++) {
-      // If the current item's weight is greater than the current capacity, skip it
-      if (weights[i - 1] > capacity[j]) {
-        dp[i][j] = dp[i - 1][j];
-      } else {
-        // Choose the maximum value between including and excluding the current item
-        dp[i][j] = Math.max(
-          dp[i - 1][j],
-          values[i - 1] + dp[i - 1][j - weights[i - 1]]
+  // Populate the dp array using bottom-up dynamic programming
+  for (let knapsack = 1; knapsack <= numKnapsacks; knapsack++) {
+    for (let item = 1; item <= numItems; item++) {
+      if (weights[item - 1] <= capacities[knapsack - 1]) {
+        dp[knapsack][item] = Math.max(
+          dp[knapsack - 1][item],
+          profits[item - 1] + dp[knapsack - 1][item - 1]
         );
+      } else {
+        dp[knapsack][item] = dp[knapsack - 1][item];
       }
     }
   }
 
-  // The final results are stored in the last element of each subarray
-  const results = dp.map((row) => row[capacity.length - 1]);
-
-  return results;
+  // Return the maximum profit
+  return dp[numKnapsacks][numItems];
 }
 
-module.exports = { knapsack };
+module.exports = multipleKnapsack;
