@@ -6,6 +6,7 @@ const authenticatedRoute = express.Router();
 authenticatedRoute.use(async function (req, res, next) {
   try {
     let accessTokenFromClient = req.headers.authorization?.split(" ")[1];
+    console.log("token", accessTokenFromClient);
 
     if (!accessTokenFromClient) {
       return res.status(401).send("Authorization Header is missing");
