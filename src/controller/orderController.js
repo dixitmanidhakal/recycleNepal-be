@@ -342,15 +342,24 @@ const orderTracker = async (req, res) => {
 };
 const getOrdersForBuyers = async (req, res) => {
   try {
-    // Assuming you get the buyerIds from query parameters
-    const buyersIds = req.params.id;
-    console.log("buyersid", buyersIds);
+    // Assuming you get the buyerId from query parameters
+    const buyerId = req.params.id;
+    console.log("buyerId", buyerId);
 
     const { isComplete } = req.body;
     console.log("isComplete", isComplete);
 
-    // Fetch orders for the specified buyerIds
-    const orders = await Order.find({ buyerIds: { $in: buyersIds } });
+    // If isComplete is true, replace the buyersIds array with an array that contains only buyerId
+    // and set isComplete to true in the database
+    if (isComplete) {
+      await Order.updateMany(
+        { buyerIds: { $in: [buyerId] } },
+        { $set: { buyerIds: [buyerId], isComplete: true } }
+      );
+    }
+
+    // Fetch orders for the specified buyerId
+    const orders = await Order.find({ buyerIds: { $in: [buyerId] } });
 
     // Extract userId and isComplete from each order
     const ordersWithUserIdAndIsComplete = orders.map(
@@ -361,7 +370,7 @@ const getOrdersForBuyers = async (req, res) => {
     const usersInformation = await Promise.all(
       ordersWithUserIdAndIsComplete.map(async ({ userId, isComplete }) => {
         const userInformation = await userRegularModel.findById(userId, {
-          cart: 0,
+          // cart: 0,
           role: 0,
           password: 0,
           email: 0,
@@ -376,5 +385,4 @@ const getOrdersForBuyers = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 module.exports = { orderTracker, getOrdersForBuyers };
