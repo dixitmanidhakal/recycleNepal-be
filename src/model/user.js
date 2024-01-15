@@ -35,6 +35,7 @@ const regularUserSchema = new mongoose.Schema({
   cart: {
     type: [
       {
+        volume: { type: String, required: true },
         name: String,
         quantity: Number,
         unitPrice: Number,

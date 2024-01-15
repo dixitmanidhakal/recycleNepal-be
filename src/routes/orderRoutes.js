@@ -9,8 +9,8 @@ const router = express.Router();
 
 router.post("/createOrder/:id", orderTracker);
 
-router.post("/getOrderList/:id", getOrdersForBuyers);
+router.get("/getOrderList/:id", getOrdersForBuyers);
 
-// router.post("/accpectedOrder", orderCompletion);
+router.post("/accpectedOrder/:id", orderCompletion);
 
 module.exports = router;

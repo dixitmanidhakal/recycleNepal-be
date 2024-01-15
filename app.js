@@ -20,3 +20,4 @@ app.use("/users", authenticatedRoute, userRoutes);
 app.use("/orders", authenticatedRoute, orderRoutes);
 
 module.exports = app;
+    

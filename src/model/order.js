@@ -7,10 +7,14 @@ const OrderSchema = new Schema({
   buyerIds: { type: [String], default: [] },
   orderDetails: [
     {
-      _id: false,
-      name: { type: String },
-      quantity: { type: Number, required: true },
-      unitPrice: { type: String, required: true },
+      volume: { type: String },
+      details: {
+        _id: false,
+        name: { type: String },
+        quantity: { type: Number, required: true },
+        unitPrice: { type: Number, required: true },
+        total: {type: Number, required: true}
+      },
     },
   ],
   isComplete: { type: Boolean },
