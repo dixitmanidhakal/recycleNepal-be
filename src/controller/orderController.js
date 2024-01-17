@@ -130,13 +130,14 @@ const getOrdersForBuyers = async (req, res) => {
 
     await Order.updateMany(
       { buyerIds: { $in: [buyerId] } },
-      { $set: { buyerIds: [buyerId], isComplete: false } }
+      { $set: { buyerIds: [buyerId] } }
     );
 
     // Fetch orders for the specified buyerId
-    const orders = await Order.find({ buyerIds: { $in: [buyerId] } }).populate(
-      "orderDetails"
-    );
+    const orders = await Order.find({
+      buyerIds: { $in: [buyerId] },
+      isComplete: false,
+    }).populate("orderDetails");
 
     // Extract userId and isComplete from each order
     const ordersWithUserIdAndIsComplete = orders.map(
@@ -186,9 +187,9 @@ const orderCompletion = async (req, res) => {
     }
 
     // Fetch orders for the specified buyerId
-    const orders = await Order.find({ buyerIds: { $in: [buyerId] } }).populate(
-      "orderDetails"
-    );
+    const orders = await Order.find({
+      $and: [{ buyerIds: { $in: [buyerId] } }, { isComplete: true }],
+    }).populate("orderDetails");
 
     // Extract userId and isComplete from each order
     const ordersWithUserIdAndIsComplete = orders.map(
@@ -220,4 +221,110 @@ const orderCompletion = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-module.exports = { orderTracker, getOrdersForBuyers, orderCompletion };
+const userDetails = async (req, res) => {
+  const buyerId = req.params.id;
+
+  try {
+    // Fetch orders where buyerId matches and isComplete is true
+    const orders = await Order.find({
+      buyerIds: buyerId,
+      isComplete: true,
+    });
+
+    // Check if no orders were found
+    if (orders.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No completed orders found for the specified buyerId" });
+    }
+
+    // Extract userIds from all orders
+    const userIds = orders.map((order) => order.userId);
+
+    // Fetch user details for all extracted userIds
+    const userDetails = await userRegularModel.find(
+      { _id: { $in: userIds } },
+      {
+        cart: 0, // Exclude the 'cart' field
+        role: 0,
+        password: 0,
+        email: 0,
+      }
+    );
+
+    // Check if no user details were found
+    if (userDetails.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "User details not found for the specified userIds" });
+    }
+
+    // Combine user details with their respective orders
+    const combinedData = userDetails.map((user) => {
+      const userOrders = orders
+        .filter((order) => order.userId.toString() === user._id.toString())
+        .flatMap((order) => order.orderDetails);
+      return { userDetails: user, orders: userOrders };
+    });
+
+    // Send the combined response
+    res.status(200).json(combinedData);
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+
+    // Check for specific error types (e.g., Mongoose validation error)
+    if (error.name === "ValidationError") {
+      return res
+        .status(400)
+        .json({ error: "Validation error. Please check your request data." });
+    }
+
+    // Handle other types of errors with a generic response
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const userOrderNotification = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    // Fetch orders where userId matches and isComplete is true
+    const orders = await Order.find({
+      userId,
+      isComplete: true,
+    });
+
+    // Array to store orders with buyer details
+    const ordersWithBuyerDetails = [];
+
+    // Fetch buyer details for each order
+    for (const order of orders) {
+      // Fetch buyer details for each buyerId
+      const buyerDetails = await userBuyerModel.find({
+        _id: { $in: order.buyerIds },
+      });
+
+      // Add buyer details to the order
+      const orderWithBuyerDetails = {
+        ...order.toObject(),
+        buyerDetails: buyerDetails,
+      };
+
+      // Add the modified order to the array
+      ordersWithBuyerDetails.push(orderWithBuyerDetails);
+    }
+
+    // Send the orders with buyer details as a response
+    res.status(200).json({ orders: ordersWithBuyerDetails });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+module.exports = {
+  orderTracker,
+  getOrdersForBuyers,
+  orderCompletion,
+  userDetails,
+  userOrderNotification,
+};
